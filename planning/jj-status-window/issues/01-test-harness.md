@@ -6,7 +6,7 @@ mini.test is already vendored at `tests/lua/mini/test.lua` (do not move or edit 
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] One command runs all tests headlessly and exits non-zero on failure
 - [ ] `require("mini.test")` loads the vendored copy in `tests/lua/mini/test.lua`
