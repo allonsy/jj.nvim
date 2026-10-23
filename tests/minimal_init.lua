@@ -1,0 +1,6 @@
+-- Test setup: put the vendored mini.test (tests/lua/mini/test.lua) and the plugin on runtimepath.
+local root = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h:h")
+vim.opt.runtimepath:prepend(root)
+vim.opt.runtimepath:prepend(root .. "/tests")
+
+require("mini.test").setup()
