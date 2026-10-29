@@ -14,18 +14,18 @@ A Neovim plugin for Jujutsu (jj). Users bind a key to a Lua function that pops u
 
 ## Decisions
 
-- **API:** `require("jj").open()` is the only entry point. There is no user command (`:JJ`) and no default keymap, so there is no `plugin/` directory. Users write e.g. `vim.keymap.set("n", "<leader>jj", require("jj").open)`.
+- **API:** `require("jj").status_open()` is the only entry point. There is no user command (`:JJ`) and no default keymap, so there is no `plugin/` directory. Users write e.g. `vim.keymap.set("n", "<leader>jj", require("jj").status_open)`.
 - **Config:** `require("jj").setup(opts)` is optional. Options: `width`, `height` (fractions of the editor, default 0.8) and `border` (default rounded).
 - **Content:** run `jj root` from Neovim's cwd (not the current file's directory), then `jj status --color=never` with the repo root as the working directory, so paths are relative to the root. One-shot snapshot, no auto-refresh.
 - **Window:** a single pane, centered, titled `jj` (centered title). Read-only scratch buffer (`nofile`, wiped on close, `nomodifiable`), filetype `jj`. Read-only does not block cursor movement or buffer-local keymaps, which later features will use for line selection.
 - **Closing:** `<Esc>` closes it and so does losing focus (`WinLeave`), matching Telescope. `q` is deliberately not bound.
-- **Refresh:** `r` in the window, or calling `open()` again while it is open, refreshes and focuses the existing window.
+- **Refresh:** `r` in the window, or calling `status_open()` again while it is open, refreshes and focuses the existing window.
 - **Errors:** jj missing from `$PATH` or cwd not in a repo gives a `vim.notify` at ERROR level and no window.
 
 ## Layout
 
 ```
-lua/jj/init.lua    setup() and open()
+lua/jj/init.lua    setup() and status_open()
 lua/jj/window.lua  the jj window (floating window and buffer)
 lua/jj/cli.lua     the only place jj is run; the seam tests stub
 ```
