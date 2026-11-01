@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] Outside a jj repo, `status_open()` notifies at ERROR level with jj's message and opens no window
-- [ ] With jj missing, `status_open()` notifies at ERROR level with a "jj not found" message and opens no window
-- [ ] No leftover buffer or window remains after an error
-- [ ] Tests cover both error paths
+- [x] Outside a jj repo, `status_open()` notifies at ERROR level with jj's message and opens no window
+- [x] With jj missing, `status_open()` notifies at ERROR level with a "jj not found" message and opens no window
+- [x] No leftover buffer or window remains after an error
+- [x] Tests cover both error paths
 
 **Context:** Read `planning/jj-status-window/spec.md` (design, layout and decisions) and `GLOSSARY.md` (vocabulary) before starting.

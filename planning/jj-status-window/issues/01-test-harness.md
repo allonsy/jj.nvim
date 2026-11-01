@@ -8,9 +8,9 @@ mini.test is already vendored at `tests/lua/mini/test.lua` (do not move or edit 
 
 **Status:** done
 
-- [ ] One command runs all tests headlessly and exits non-zero on failure
-- [ ] `require("mini.test")` loads the vendored copy in `tests/lua/mini/test.lua`
-- [ ] A trivial `tests/test_*.lua` test passes under that command
-- [ ] The command is documented where a contributor will find it (e.g. a short note in the README)
+- [x] One command runs all tests headlessly and exits non-zero on failure
+- [x] `require("mini.test")` loads the vendored copy in `tests/lua/mini/test.lua`
+- [x] A trivial `tests/test_*.lua` test passes under that command
+- [x] The command is documented where a contributor will find it (e.g. a short note in the README)
 
 **Context:** Read `planning/jj-status-window/spec.md` (design, layout and decisions) and `GLOSSARY.md` (vocabulary) before starting.
