@@ -9,7 +9,7 @@ The centered floating window, titled `jj`, that hosts the plugin's interface. It
 _Avoid_: popup, panel, modal
 
 **Status view**:
-The content of the jj window showing the output of `jj status` for the current repo.
+The content of the jj window showing the output of `jj show -T "" -s @` for the current repo.
 _Avoid_: status buffer, status page
 
 **Repo root**:

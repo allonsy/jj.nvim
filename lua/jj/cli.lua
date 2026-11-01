@@ -21,7 +21,7 @@ end
 function M.status()
   local root, err = M.root()
   if not root then return nil, err end
-  return run({ "status", "--color=never" }, root)
+  return run({ "show", "@", "-T", "", "-s", "--color=never" }, root)
 end
 
 return M

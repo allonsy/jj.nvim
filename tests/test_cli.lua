@@ -40,6 +40,7 @@ T["status from a subdirectory of a repo"] = function()
   expect.equality(root, repo)
   expect.equality(err, nil)
   expect.equality(output:find("A sub/dir/file.txt", 1, true) ~= nil, true)
+  expect.equality(output:find("Working copy", 1, true), nil)
   expect.equality(output:find("\27", 1, true), nil)
 end
 
