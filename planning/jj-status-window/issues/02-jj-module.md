@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] From a subdirectory of a jj repo, the module returns the status output computed from the repo root
-- [ ] Output contains no color escape codes
-- [ ] Outside a repo, it returns an error carrying jj's stderr
-- [ ] With jj missing from `$PATH`, it returns a "jj not found" error
-- [ ] Tests cover success, not-a-repo and jj-missing, using a temporary jj repo and a stubbed jj for the missing case
+- [x] From a subdirectory of a jj repo, the module returns the status output computed from the repo root
+- [x] Output contains no color escape codes
+- [x] Outside a repo, it returns an error carrying jj's stderr
+- [x] With jj missing from `$PATH`, it returns a "jj not found" error
+- [x] Tests cover success, not-a-repo and jj-missing, using a temporary jj repo and a stubbed jj for the missing case
 
 **Context:** Read `planning/jj-status-window/spec.md` (design, layout and decisions) and `GLOSSARY.md` (vocabulary) before starting.

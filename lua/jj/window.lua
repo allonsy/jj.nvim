@@ -37,6 +37,11 @@ function M.open(lines)
     if vim.api.nvim_win_is_valid(window) then vim.api.nvim_win_close(window, true) end
   end
   vim.keymap.set("n", "<Esc>", close, { buffer = buffer, nowait = true })
+  vim.api.nvim_create_autocmd("WinLeave", {
+    buffer = buffer,
+    once = true,
+    callback = function() vim.schedule(close) end,
+  })
   return window
 end
 

@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] Moving focus to another window closes the jj window and wipes its buffer
-- [ ] `<Esc>` still closes the window
-- [ ] Closing via either route leaves no error or leftover window
-- [ ] Tests cover close on focus loss
+- [x] Moving focus to another window closes the jj window and wipes its buffer
+- [x] `<Esc>` still closes the window
+- [x] Closing via either route leaves no error or leftover window
+- [x] Tests cover close on focus loss
 
 **Context:** Read `planning/jj-status-window/spec.md` (design, layout and decisions) and `GLOSSARY.md` (vocabulary) before starting.

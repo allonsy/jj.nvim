@@ -72,6 +72,43 @@ T["escape closes the window and wipes the buffer"] = function()
   expect.equality(vim.api.nvim_buf_is_valid(buffer), false)
 end
 
+local function is_closed(window, buffer)
+  local window_gone = not vim.api.nvim_win_is_valid(window)
+  local buffer_gone = not vim.api.nvim_buf_is_valid(buffer)
+  return window_gone and buffer_gone
+end
+
+T["moving focus to another window closes it and wipes the buffer"] = function()
+  local previous = vim.api.nvim_get_current_win()
+  local window, buffer = open_window()
+
+  vim.api.nvim_set_current_win(previous)
+  local closed = vim.wait(1000, function() return is_closed(window, buffer) end)
+
+  expect.equality(closed, true)
+end
+
+T["window command focus change closes it"] = function()
+  vim.cmd("split")
+  local window, buffer = open_window()
+
+  vim.cmd("wincmd w")
+  local closed = vim.wait(1000, function() return is_closed(window, buffer) end)
+
+  expect.equality(closed, true)
+end
+
+T["escape leaves no error or leftover window"] = function()
+  local windows_before = #vim.api.nvim_list_wins()
+  open_window()
+
+  vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "x", false)
+  vim.wait(50)
+
+  expect.equality(#vim.api.nvim_list_wins(), windows_before)
+  expect.equality(vim.v.errmsg, "")
+end
+
 T["q is not bound"] = function()
   local _, buffer = open_window()
   local maps = vim.api.nvim_buf_get_keymap(buffer, "n")

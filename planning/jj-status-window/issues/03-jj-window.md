@@ -6,11 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] `status_open()` in a jj repo shows a float titled `jj` containing the `jj status` output
-- [ ] The float is centered and about 80% of the editor, with a rounded border
-- [ ] The buffer is not modifiable, is a scratch buffer and has filetype `jj`; the cursor still moves normally
-- [ ] `<Esc>` in normal mode closes the window and wipes the buffer; `q` does nothing special
-- [ ] No `:JJ` command and no default keymap are registered
-- [ ] Tests (with the jj module stubbed) cover window title, content, buffer options and `<Esc>` close
+- [x] `status_open()` in a jj repo shows a float titled `jj` containing the `jj status` output
+- [x] The float is centered and about 80% of the editor, with a rounded border
+- [x] The buffer is not modifiable, is a scratch buffer and has filetype `jj`; the cursor still moves normally
+- [x] `<Esc>` in normal mode closes the window and wipes the buffer; `q` does nothing special
+- [x] No `:JJ` command and no default keymap are registered
+- [x] Tests (with the jj module stubbed) cover window title, content, buffer options and `<Esc>` close
 
 **Context:** Read `planning/jj-status-window/spec.md` (design, layout and decisions) and `GLOSSARY.md` (vocabulary) before starting.
