@@ -11,7 +11,11 @@ function M.status_open()
     return
   end
   local lines = vim.split(output, "\n", { trimempty = true })
-  window.open(lines)
+  if window.is_open() then
+    window.update(lines)
+    return
+  end
+  window.open(lines, M.status_open)
 end
 
 return M

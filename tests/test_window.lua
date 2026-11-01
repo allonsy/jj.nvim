@@ -120,6 +120,52 @@ T["q is not bound"] = function()
   expect.equality(bound["q"], nil)
 end
 
+local function count_jj_windows()
+  local count = 0
+  for _, window in ipairs(vim.api.nvim_list_wins()) do
+    local buffer = vim.api.nvim_win_get_buf(window)
+    if vim.bo[buffer].filetype == "jj" then count = count + 1 end
+  end
+  return count
+end
+
+T["calling status_open twice leaves one window with current output"] = function()
+  local window, buffer = open_window()
+  require("jj.cli").status = function() return "new output\n" end
+
+  require("jj").status_open()
+
+  expect.equality(count_jj_windows(), 1)
+  expect.equality(vim.api.nvim_get_current_win(), window)
+  expect.equality(vim.api.nvim_buf_get_lines(buffer, 0, -1, false), { "new output" })
+  expect.equality(vim.bo[buffer].modifiable, false)
+end
+
+T["r refreshes the content in place"] = function()
+  local window, buffer = open_window()
+  require("jj.cli").status = function() return "changed\n" end
+
+  vim.api.nvim_feedkeys("r", "x", false)
+
+  expect.equality(vim.api.nvim_win_is_valid(window), true)
+  expect.equality(count_jj_windows(), 1)
+  expect.equality(vim.api.nvim_buf_get_lines(buffer, 0, -1, false), { "changed" })
+  expect.equality(vim.bo[buffer].modifiable, false)
+end
+
+T["refresh failure keeps the window open"] = function()
+  local window, buffer = open_window()
+  require("jj.cli").status = function() return nil, { kind = "not_a_repo", message = "gone" } end
+  local original_notify = vim.notify
+  vim.notify = function() end
+
+  vim.api.nvim_feedkeys("r", "x", false)
+  vim.notify = original_notify
+
+  expect.equality(vim.api.nvim_win_is_valid(window), true)
+  expect.equality(vim.api.nvim_buf_get_lines(buffer, 0, -1, false)[1], "Working copy changes:")
+end
+
 T["registers no user command or default keymap"] = function()
   expect.equality(vim.fn.exists(":JJ"), 0)
   expect.equality(vim.fn.maparg("<leader>jj", "n"), "")

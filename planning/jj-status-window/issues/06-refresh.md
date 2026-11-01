@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] Calling `status_open()` twice results in exactly one jj window, showing current output
-- [ ] After the repo changes, `r` updates the content in place
-- [ ] The buffer stays read-only after a refresh
-- [ ] Tests cover both the repeated `status_open()` and the `r` paths
+- [x] Calling `status_open()` twice results in exactly one jj window, showing current output
+- [x] After the repo changes, `r` updates the content in place
+- [x] The buffer stays read-only after a refresh
+- [x] Tests cover both the repeated `status_open()` and the `r` paths
 
 **Context:** Read `planning/jj-status-window/spec.md` (design, layout and decisions) and `GLOSSARY.md` (vocabulary) before starting.
