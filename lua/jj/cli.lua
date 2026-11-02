@@ -28,6 +28,7 @@ local FIELD_SEPARATOR = "\31"
 
 local COMMITS_TEMPLATE = table.concat({
   "bookmarks",
+  "conflict",
   "change_id.shortest()",
   "commit_id.shortest()",
   "description.first_line()",
@@ -37,9 +38,10 @@ local function parse_commit(line)
   local fields = vim.split(line, FIELD_SEPARATOR, { plain = true })
   return {
     bookmarks = vim.split(fields[1], " ", { trimempty = true }),
-    change_id = fields[2],
-    commit_id = fields[3],
-    description = fields[4] or "",
+    conflict = fields[2] == "true",
+    change_id = fields[3],
+    commit_id = fields[4],
+    description = fields[5] or "",
   }
 end
 
@@ -54,6 +56,41 @@ function M.commits()
     table.insert(commits, parse_commit(line))
   end
   return commits
+end
+
+local function run_in_root(args)
+  local root, err = M.root()
+  if not root then return nil, err end
+  return run(args, root)
+end
+
+local function file_fileset(path)
+  local escaped = path:gsub("\\", "\\\\"):gsub('"', '\\"')
+  return 'root-file:"' .. escaped .. '"'
+end
+
+local function squash_args(extra)
+  local args = { "squash", "--keep-emptied", "--use-destination-message" }
+  return vim.list_extend(args, extra)
+end
+
+function M.squash_file(path, change_id)
+  local args = squash_args({ "--into", change_id, file_fileset(path) })
+  return run_in_root(args)
+end
+
+function M.squash_commit(change_id)
+  local args = squash_args({ "--into", change_id })
+  return run_in_root(args)
+end
+
+function M.restore_file(path)
+  return run_in_root({ "restore", file_fileset(path) })
+end
+
+function M.unsquash_commit(change_id)
+  local args = squash_args({ "--from", change_id, "--into", "@" })
+  return run_in_root(args)
 end
 
 return M

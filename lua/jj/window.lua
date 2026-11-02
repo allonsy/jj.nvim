@@ -178,8 +178,23 @@ function M.update(lines, commits)
   vim.api.nvim_set_current_win(current_window)
 end
 
+local popup_window
+
+function M.register_popup(popup)
+  popup_window = popup
+end
+
 local function is_jj_window(candidate)
-  return candidate == current_window or candidate == current_commits_window
+  return candidate == current_window
+    or candidate == current_commits_window
+    or candidate == popup_window
+end
+
+local function pane_context(pane)
+  local row = vim.api.nvim_win_get_cursor(0)[1]
+  local context = { pane = pane, index = row }
+  if pane == "files" then context.line = vim.api.nvim_get_current_line() end
+  return context
 end
 
 local function close_if_valid(window)
@@ -211,11 +226,16 @@ function M.open(lines, actions, commits)
   local function close_unless_jj_window()
     if not is_jj_window(vim.api.nvim_get_current_win()) then close() end
   end
-  for _, pane_buffer in ipairs({ buffer, commits_buffer }) do
+  local panes = { { buffer = buffer, name = "files" }, { buffer = commits_buffer, name = "commits" } }
+  for _, pane in ipairs(panes) do
+    local pane_buffer = pane.buffer
     vim.keymap.set("n", "<Esc>", close, { buffer = pane_buffer, nowait = true })
     vim.keymap.set("n", "<Tab>", switch_pane, { buffer = pane_buffer, nowait = true })
     for _, action in ipairs(actions) do
-      vim.keymap.set("n", action.key, action.callback, { buffer = pane_buffer, nowait = true })
+      local function run_action()
+        action.callback(pane_context(pane.name))
+      end
+      vim.keymap.set("n", action.key, run_action, { buffer = pane_buffer, nowait = true })
     end
     vim.api.nvim_create_autocmd("WinLeave", {
       buffer = pane_buffer,

@@ -77,7 +77,7 @@ T["shows a sticky menu bar below the content"] = function()
   local menu_config = vim.api.nvim_win_get_config(menu_window)
 
   expect.equality(menu_lines[1], string.rep("─", content_config.width))
-  expect.equality(menu_lines[2], "r: refresh")
+  expect.equality(menu_lines[2], "r: refresh | s: squash | u: restore")
   local commits_window = find_window_by_filetype("jj-commits")
   local commits_config = vim.api.nvim_win_get_config(commits_window)
   expect.equality(menu_config.row, commits_config.row + 1 + commits_config.height)
@@ -112,6 +112,28 @@ T["marks a bookmarkless working copy with @"] = function()
     "@ | ab | 12f | wip",
     "  | cd | 34e | parent",
   })
+end
+
+T["marks a conflicted commit with a red (C)"] = function()
+  require("jj.cli").commits = function()
+    return {
+      { bookmarks = {}, conflict = false, change_id = "ab", commit_id = "12f", description = "wip" },
+      { bookmarks = {}, conflict = true, change_id = "cd", commit_id = "34e", description = "bad" },
+    }
+  end
+  open_window()
+  local commits_window = find_window_by_filetype("jj-commits")
+  local buffer = vim.api.nvim_win_get_buf(commits_window)
+  local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+  local marks = vim.api.nvim_buf_get_extmarks(buffer, -1, 0, -1, { details = true })
+  local conflict_groups = {}
+  for _, mark in ipairs(marks) do
+    if mark[4].hl_group == "JjConflict" then table.insert(conflict_groups, { mark[2], mark[3] }) end
+  end
+
+  expect.equality(lines[1], "@ |     | ab | 12f | wip")
+  expect.equality(lines[2], "  | (C) | cd | 34e | bad")
+  expect.equality(conflict_groups, { { 1, 4 } })
 end
 
 T["caps the commits pane at six rows"] = function()

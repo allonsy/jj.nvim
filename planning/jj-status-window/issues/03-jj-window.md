@@ -4,7 +4,7 @@
 
 **Blocked by:** 02 (jj module)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] `status_open()` in a jj repo shows a float titled `jj` containing the `jj status` output
 - [x] The float is centered and about 80% of the editor, with a rounded border

@@ -4,7 +4,7 @@
 
 **Blocked by:** 03 (Open the jj window)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Moving focus to another window closes the jj window and wipes its buffer
 - [x] `<Esc>` still closes the window

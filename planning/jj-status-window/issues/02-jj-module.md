@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 (Test harness)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] From a subdirectory of a jj repo, the module returns the status output computed from the repo root
 - [x] Output contains no color escape codes

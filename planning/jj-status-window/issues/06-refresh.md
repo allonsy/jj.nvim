@@ -4,7 +4,7 @@
 
 **Blocked by:** 03 (Open the jj window)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Calling `status_open()` twice results in exactly one jj window, showing current output
 - [x] After the repo changes, `r` updates the content in place

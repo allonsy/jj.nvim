@@ -4,7 +4,7 @@
 
 **Blocked by:** 03 (Open the jj window)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Outside a jj repo, `status_open()` notifies at ERROR level with jj's message and opens no window
 - [x] With jj missing, `status_open()` notifies at ERROR level with a "jj not found" message and opens no window
