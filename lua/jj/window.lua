@@ -3,20 +3,70 @@ local M = {}
 local WIDTH_FRACTION = 0.8
 local HEIGHT_FRACTION = 0.8
 
-local function float_config()
+local MENU_HEIGHT = 2
+local MENU_SEPARATOR = "─"
+local MENU_DELIMITER = " | "
+
+local CONTENT_BORDER = { "╭", "─", "╮", "│", "", "", "", "│" }
+local MENU_BORDER = { "", "", "", "│", "╯", "─", "╰", "│" }
+
+local function layout()
   local width = math.floor(vim.o.columns * WIDTH_FRACTION)
-  local height = math.floor(vim.o.lines * HEIGHT_FRACTION)
+  local total_height = math.floor(vim.o.lines * HEIGHT_FRACTION)
+  local content_height = total_height - MENU_HEIGHT
+  return {
+    width = width,
+    content_height = content_height,
+    col = math.floor((vim.o.columns - width) / 2),
+    row = math.floor((vim.o.lines - total_height) / 2),
+  }
+end
+
+local function content_config(frame)
   return {
     relative = "editor",
-    width = width,
-    height = height,
-    col = math.floor((vim.o.columns - width) / 2),
-    row = math.floor((vim.o.lines - height) / 2),
+    width = frame.width,
+    height = frame.content_height,
+    col = frame.col,
+    row = frame.row,
     style = "minimal",
-    border = "rounded",
+    border = CONTENT_BORDER,
     title = "jj",
     title_pos = "center",
   }
+end
+
+local function menu_config(frame)
+  return {
+    relative = "editor",
+    width = frame.width,
+    height = MENU_HEIGHT,
+    col = frame.col,
+    row = frame.row + 1 + frame.content_height,
+    style = "minimal",
+    border = MENU_BORDER,
+    focusable = false,
+    zindex = 51,
+  }
+end
+
+local function menu_lines(actions, width)
+  local labels = {}
+  for _, action in ipairs(actions) do
+    table.insert(labels, action.key .. ": " .. action.description)
+  end
+  local separator = string.rep(MENU_SEPARATOR, width)
+  local menu_text = table.concat(labels, MENU_DELIMITER)
+  return { separator, menu_text }
+end
+
+local function create_menu_buffer(actions, width)
+  local buffer = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(buffer, 0, -1, false, menu_lines(actions, width))
+  vim.bo[buffer].bufhidden = "wipe"
+  vim.bo[buffer].filetype = "jj-menu"
+  vim.bo[buffer].modifiable = false
+  return buffer
 end
 
 local HIGHLIGHT_NAMESPACE = vim.api.nvim_create_namespace("jj")
@@ -76,15 +126,26 @@ function M.update(lines)
   vim.api.nvim_set_current_win(current_window)
 end
 
-function M.open(lines, on_refresh)
+local function close_if_valid(window)
+  if vim.api.nvim_win_is_valid(window) then vim.api.nvim_win_close(window, true) end
+end
+
+function M.open(lines, actions)
+  actions = actions or {}
+  local frame = layout()
   local buffer = create_buffer(lines)
-  local window = vim.api.nvim_open_win(buffer, true, float_config())
+  local window = vim.api.nvim_open_win(buffer, true, content_config(frame))
+  local menu_buffer = create_menu_buffer(actions, frame.width)
+  local menu_window = vim.api.nvim_open_win(menu_buffer, false, menu_config(frame))
   current_window = window
   local function close()
-    if vim.api.nvim_win_is_valid(window) then vim.api.nvim_win_close(window, true) end
+    close_if_valid(menu_window)
+    close_if_valid(window)
   end
   vim.keymap.set("n", "<Esc>", close, { buffer = buffer, nowait = true })
-  if on_refresh then vim.keymap.set("n", "r", on_refresh, { buffer = buffer, nowait = true }) end
+  for _, action in ipairs(actions) do
+    vim.keymap.set("n", action.key, action.callback, { buffer = buffer, nowait = true })
+  end
   vim.api.nvim_create_autocmd("WinLeave", {
     buffer = buffer,
     once = true,

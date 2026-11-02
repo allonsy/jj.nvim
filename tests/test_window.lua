@@ -34,9 +34,9 @@ T["shows a centered rounded float titled jj"] = function()
   expect.equality(config.title_pos, "center")
   expect.equality(config.border[1], "╭")
   expect.equality(config.width, math.floor(vim.o.columns * 0.8))
-  expect.equality(config.height, math.floor(vim.o.lines * 0.8))
+  expect.equality(config.height, math.floor(vim.o.lines * 0.8) - 2)
   expect.equality(config.col, math.floor((vim.o.columns - config.width) / 2))
-  expect.equality(config.row, math.floor((vim.o.lines - config.height) / 2))
+  expect.equality(config.row, math.floor((vim.o.lines - config.height - 2) / 2))
 end
 
 T["shows the status output"] = function()
@@ -44,6 +44,37 @@ T["shows the status output"] = function()
   local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
 
   expect.equality(lines, { "A file.txt", "M other.txt", "D gone.txt" })
+end
+
+T["shows a sticky menu bar below the content"] = function()
+  local window = open_window()
+  local content_config = vim.api.nvim_win_get_config(window)
+  local menu_window
+  for _, candidate in ipairs(vim.api.nvim_list_wins()) do
+    local buffer = vim.api.nvim_win_get_buf(candidate)
+    if vim.bo[buffer].filetype == "jj-menu" then menu_window = candidate end
+  end
+  local menu_buffer = vim.api.nvim_win_get_buf(menu_window)
+  local menu_lines = vim.api.nvim_buf_get_lines(menu_buffer, 0, -1, false)
+  local menu_config = vim.api.nvim_win_get_config(menu_window)
+
+  expect.equality(menu_lines[1], string.rep("─", content_config.width))
+  expect.equality(menu_lines[2], "r: refresh")
+  expect.equality(menu_config.row, content_config.row + 1 + content_config.height)
+  expect.equality(menu_config.focusable, false)
+end
+
+T["closing the content window closes the menu"] = function()
+  open_window()
+
+  vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "x", false)
+
+  local menu_count = 0
+  for _, candidate in ipairs(vim.api.nvim_list_wins()) do
+    local buffer = vim.api.nvim_win_get_buf(candidate)
+    if vim.bo[buffer].filetype == "jj-menu" then menu_count = menu_count + 1 end
+  end
+  expect.equality(menu_count, 0)
 end
 
 T["highlights lines by modification code"] = function()
