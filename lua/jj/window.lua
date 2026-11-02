@@ -1,25 +1,19 @@
 local colors = require("jj.colors")
 local commit_lines = require("jj.commit_lines")
+local options = require("jj.options")
 
 local M = {}
 
-local WIDTH_FRACTION = 0.8
-local HEIGHT_FRACTION = 0.8
-
 local MENU_HEIGHT = 2
-local MENU_SEPARATOR = "─"
 local MENU_DELIMITER = " | "
 
 local MAX_COMMIT_ROWS = 6
 local COMMIT_SEPARATOR_ROWS = 1
 
-local CONTENT_BORDER = { "╭", "─", "╮", "│", "", "", "", "│" }
-local MENU_BORDER = { "", "", "", "│", "╯", "─", "╰", "│" }
-local COMMITS_BORDER = { "├", "─", "┤", "│", "", "", "", "│" }
-
 local function layout(commit_count)
-  local width = math.floor(vim.o.columns * WIDTH_FRACTION)
-  local total_height = math.floor(vim.o.lines * HEIGHT_FRACTION)
+  local resolved = options.resolve()
+  local width = math.floor(vim.o.columns * resolved.width)
+  local total_height = math.floor(vim.o.lines * resolved.height)
   local content_height = total_height - MENU_HEIGHT
   local commits_height = math.min(math.max(commit_count, 1), MAX_COMMIT_ROWS)
   local files_height = content_height - commits_height - COMMIT_SEPARATOR_ROWS
@@ -41,7 +35,7 @@ local function content_config(frame)
     col = frame.col,
     row = frame.row,
     style = "minimal",
-    border = CONTENT_BORDER,
+    border = options.borders().content,
     title = "jj",
     title_pos = "center",
   }
@@ -55,7 +49,7 @@ local function commits_config(frame)
     col = frame.col,
     row = frame.row + 1 + frame.files_height,
     style = "minimal",
-    border = COMMITS_BORDER,
+    border = options.borders().commits,
   }
 end
 
@@ -67,7 +61,7 @@ local function menu_config(frame)
     col = frame.col,
     row = frame.row + 1 + frame.content_height,
     style = "minimal",
-    border = MENU_BORDER,
+    border = options.borders().menu,
     focusable = false,
     zindex = 51,
   }
@@ -78,7 +72,7 @@ local function menu_lines(actions, width)
   for _, action in ipairs(actions) do
     table.insert(labels, action.key .. ": " .. action.description)
   end
-  local separator = string.rep(MENU_SEPARATOR, width)
+  local separator = string.rep(options.borders().separator, width)
   local menu_text = table.concat(labels, MENU_DELIMITER)
   return { separator, menu_text }
 end
