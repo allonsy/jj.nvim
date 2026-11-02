@@ -64,4 +64,89 @@ T["status with jj missing from PATH"] = function()
   expect.equality(err.message, "jj not found on $PATH")
 end
 
+local function jj(repo, args)
+  local result = vim.system(vim.list_extend({ "jj" }, args), { cwd = repo, text = true }):wait()
+  return vim.trim(result.stdout)
+end
+
+local function repo_with_parent_and_child()
+  local repo = tmpdir()
+  jj(repo, { "git", "init" })
+  vim.fn.writefile({ "base" }, repo .. "/keep.txt")
+  jj(repo, { "describe", "-m", "parent" })
+  jj(repo, { "new", "-m", "child" })
+  vim.fn.writefile({ "edit" }, repo .. "/keep.txt")
+  vim.fn.writefile({ "new" }, repo .. "/my file.txt")
+  vim.fn.chdir(repo)
+  return repo
+end
+
+T["squash_file moves one file into the target"] = function()
+  local repo = repo_with_parent_and_child()
+  local parent_id = jj(repo, { "log", "-r", "@-", "--no-graph", "-T", "change_id.shortest()" })
+
+  local ok, err = cli.squash_file("my file.txt", parent_id)
+
+  expect.equality(err, nil)
+  expect.equality(ok ~= nil, true)
+  local child_files = jj(repo, { "diff", "-r", "@", "-s" })
+  expect.equality(child_files, "M keep.txt")
+  local parent_files = jj(repo, { "diff", "-r", "@-", "-s" })
+  expect.equality(parent_files:find("my file.txt", 1, true) ~= nil, true)
+end
+
+T["squash_commit squashes everything into the target"] = function()
+  local repo = repo_with_parent_and_child()
+  local parent_id = jj(repo, { "log", "-r", "@-", "--no-graph", "-T", "change_id.shortest()" })
+
+  local ok = cli.squash_commit(parent_id)
+
+  expect.equality(ok ~= nil, true)
+  expect.equality(jj(repo, { "diff", "-r", "@", "-s" }), "")
+  local working_copy_description = jj(repo, { "log", "-r", "@", "--no-graph", "-T", "description.first_line()" })
+  expect.equality(working_copy_description, "child")
+end
+
+T["restore_file discards one file's changes"] = function()
+  local repo = repo_with_parent_and_child()
+
+  local ok = cli.restore_file("keep.txt")
+
+  expect.equality(ok ~= nil, true)
+  expect.equality(jj(repo, { "diff", "-r", "@", "-s" }), "A my file.txt")
+end
+
+T["unsquash_commit pulls a commit's changes into the working copy"] = function()
+  local repo = repo_with_parent_and_child()
+  local parent_id = jj(repo, { "log", "-r", "@-", "--no-graph", "-T", "change_id.shortest()" })
+
+  local ok, err = cli.unsquash_commit(parent_id)
+
+  expect.equality(err, nil)
+  expect.equality(ok ~= nil, true)
+  local files = jj(repo, { "diff", "-r", "@", "-s" })
+  expect.equality(files:find("keep.txt", 1, true) ~= nil, true)
+end
+
+T["commits reports whether a commit is conflicted"] = function()
+  local repo = repo_with_parent_and_child()
+  jj(repo, { "new", "@-", "-m", "side" })
+  vim.fn.writefile({ "side" }, repo .. "/keep.txt")
+  jj(repo, { "rebase", "-r", "@", "-d", "description(substring:\"child\")" })
+
+  local commits = cli.commits()
+
+  expect.equality(commits[1].conflict, true)
+  expect.equality(commits[2].conflict, false)
+end
+
+T["a failing operation returns an error"] = function()
+  repo_with_parent_and_child()
+
+  local ok, err = cli.squash_commit("zzzznonexistent")
+
+  expect.equality(ok, nil)
+  expect.equality(type(err.message), "string")
+end
+
 return T
