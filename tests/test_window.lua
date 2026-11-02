@@ -1,6 +1,6 @@
 local expect = MiniTest.expect
 
-local STATUS_OUTPUT = "Working copy changes:\nA file.txt\nWorking copy : abc 123\n"
+local STATUS_OUTPUT = "A file.txt\nM other.txt\nD gone.txt\n"
 
 local original_status
 
@@ -43,7 +43,19 @@ T["shows the status output"] = function()
   local _, buffer = open_window()
   local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
 
-  expect.equality(lines, { "Working copy changes:", "A file.txt", "Working copy : abc 123" })
+  expect.equality(lines, { "A file.txt", "M other.txt", "D gone.txt" })
+end
+
+T["highlights lines by modification code"] = function()
+  local _, buffer = open_window()
+  local namespace = vim.api.nvim_create_namespace("jj")
+  local marks = vim.api.nvim_buf_get_extmarks(buffer, namespace, 0, -1, { details = true })
+  local groups = {}
+  for _, mark in ipairs(marks) do
+    table.insert(groups, mark[4].hl_group)
+  end
+
+  expect.equality(groups, { "JjAdded", "JjModified", "JjDeleted" })
 end
 
 T["buffer is a read-only scratch buffer with filetype jj"] = function()
@@ -163,7 +175,7 @@ T["refresh failure keeps the window open"] = function()
   vim.notify = original_notify
 
   expect.equality(vim.api.nvim_win_is_valid(window), true)
-  expect.equality(vim.api.nvim_buf_get_lines(buffer, 0, -1, false)[1], "Working copy changes:")
+  expect.equality(vim.api.nvim_buf_get_lines(buffer, 0, -1, false)[1], "A file.txt")
 end
 
 T["registers no user command or default keymap"] = function()
