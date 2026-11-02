@@ -24,4 +24,36 @@ function M.status()
   return run({ "show", "@", "-T", "", "-s", "--color=never" }, root)
 end
 
+local FIELD_SEPARATOR = "\31"
+
+local COMMITS_TEMPLATE = table.concat({
+  "bookmarks",
+  "change_id.shortest()",
+  "commit_id.shortest()",
+  "description.first_line()",
+}, ' ++ "\\x1f" ++ ') .. ' ++ "\\n"'
+
+local function parse_commit(line)
+  local fields = vim.split(line, FIELD_SEPARATOR, { plain = true })
+  return {
+    bookmarks = vim.split(fields[1], " ", { trimempty = true }),
+    change_id = fields[2],
+    commit_id = fields[3],
+    description = fields[4] or "",
+  }
+end
+
+function M.commits()
+  local root, err = M.root()
+  if not root then return nil, err end
+  local args = { "log", "-r", "@ | @-", "--no-graph", "--color=never", "-T", COMMITS_TEMPLATE }
+  local out, run_err = run(args, root)
+  if not out then return nil, run_err end
+  local commits = {}
+  for _, line in ipairs(vim.split(out, "\n", { trimempty = true })) do
+    table.insert(commits, parse_commit(line))
+  end
+  return commits
+end
+
 return M

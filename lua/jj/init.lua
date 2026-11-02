@@ -1,8 +1,14 @@
 local cli = require("jj.cli")
+local colors = require("jj.colors")
 local errors = require("jj.errors")
 local window = require("jj.window")
 
 local M = {}
+
+function M.setup(opts)
+  opts = opts or {}
+  colors.set(opts.colors)
+end
 
 local function status_actions()
   return {
@@ -10,18 +16,26 @@ local function status_actions()
   }
 end
 
+local function fetch_view()
+  local output, status_err = cli.status()
+  if not output then return nil, status_err end
+  local commits, commits_err = cli.commits()
+  if not commits then return nil, commits_err end
+  local lines = vim.split(output, "\n", { trimempty = true })
+  return { lines = lines, commits = commits }
+end
+
 function M.status_open()
-  local output, err = cli.status()
-  if not output then
+  local view, err = fetch_view()
+  if not view then
     errors.log_error(err)
     return
   end
-  local lines = vim.split(output, "\n", { trimempty = true })
   if window.is_open() then
-    window.update(lines)
+    window.update(view.lines, view.commits)
     return
   end
-  window.open(lines, status_actions())
+  window.open(view.lines, status_actions(), view.commits)
 end
 
 return M
