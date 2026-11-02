@@ -4,11 +4,11 @@
 
 **Blocked by:** 03 (Open the jj window)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `status_open()` without `setup()` behaves as in ticket 03
-- [ ] `setup({ width = 0.5 })` changes the window width and leaves the other options at their defaults
-- [ ] `border` is passed through to the window
-- [ ] Tests cover defaults, partial override and full override
+- [x] `status_open()` without `setup()` behaves as in ticket 03
+- [x] `setup({ width = 0.5 })` changes the window width and leaves the other options at their defaults
+- [x] `border` is passed through to the window
+- [x] Tests cover defaults, partial override and full override
 
 **Context:** Read `planning/jj-status-window/spec.md` (design, layout and decisions) and `GLOSSARY.md` (vocabulary) before starting.
