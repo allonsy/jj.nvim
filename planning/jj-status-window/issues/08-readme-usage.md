@@ -4,10 +4,10 @@
 
 **Blocked by:** 04 (Error handling), 05 (Close on focus loss), 06 (Refresh), 07 (Setup options)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] README has an install section and the keymap example
-- [ ] Every `setup` option and its default is listed, matching the code
-- [ ] Keys and behaviors described match the implementation
+- [x] README has an install section and the keymap example
+- [x] Every `setup` option and its default is listed, matching the code
+- [x] Keys and behaviors described match the implementation
 
 **Context:** Read `planning/jj-status-window/spec.md` (design, layout and decisions) and `GLOSSARY.md` (vocabulary) before starting.
