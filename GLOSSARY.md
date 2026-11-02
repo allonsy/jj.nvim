@@ -15,3 +15,7 @@ _Avoid_: status buffer, status page
 **Repo root**:
 The top-level directory of the jj repo containing Neovim's working directory, as reported by `jj root`.
 _Avoid_: project root, workspace dir
+
+**Commits pane**:
+The bottom pane of the jj window listing the current commit (`@`) followed by its immediate parents (`@-`), at most 6 rows before it scrolls. Focus toggles with `<Tab>`.
+_Avoid_: log pane, history

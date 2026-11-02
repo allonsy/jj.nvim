@@ -2,7 +2,13 @@ local expect = MiniTest.expect
 
 local STATUS_OUTPUT = "A file.txt\nM other.txt\nD gone.txt\n"
 
+local COMMITS = {
+  { bookmarks = { "main*", "dev" }, change_id = "ab", commit_id = "12f", description = "current work" },
+  { bookmarks = {}, change_id = "cd", commit_id = "34e", description = "" },
+}
+
 local original_status
+local original_commits
 
 local T = MiniTest.new_set({
   hooks = {
@@ -10,13 +16,23 @@ local T = MiniTest.new_set({
       local cli = require("jj.cli")
       original_status = cli.status
       cli.status = function() return STATUS_OUTPUT end
+      original_commits = cli.commits
+      cli.commits = function() return COMMITS end
     end,
     post_case = function()
       require("jj.cli").status = original_status
+      require("jj.cli").commits = original_commits
       vim.cmd("silent! %bwipeout!")
     end,
   },
 })
+
+local function find_window_by_filetype(filetype)
+  for _, candidate in ipairs(vim.api.nvim_list_wins()) do
+    local buffer = vim.api.nvim_win_get_buf(candidate)
+    if vim.bo[buffer].filetype == filetype then return candidate end
+  end
+end
 
 local function open_window()
   require("jj").status_open()
@@ -34,9 +50,11 @@ T["shows a centered rounded float titled jj"] = function()
   expect.equality(config.title_pos, "center")
   expect.equality(config.border[1], "╭")
   expect.equality(config.width, math.floor(vim.o.columns * 0.8))
-  expect.equality(config.height, math.floor(vim.o.lines * 0.8) - 2)
+  local commits_height = #COMMITS
+  local total_content = math.floor(vim.o.lines * 0.8) - 2
+  expect.equality(config.height, total_content - commits_height - 1)
   expect.equality(config.col, math.floor((vim.o.columns - config.width) / 2))
-  expect.equality(config.row, math.floor((vim.o.lines - config.height - 2) / 2))
+  expect.equality(config.row, math.floor((vim.o.lines - total_content - 2) / 2))
 end
 
 T["shows the status output"] = function()
@@ -60,8 +78,52 @@ T["shows a sticky menu bar below the content"] = function()
 
   expect.equality(menu_lines[1], string.rep("─", content_config.width))
   expect.equality(menu_lines[2], "r: refresh")
-  expect.equality(menu_config.row, content_config.row + 1 + content_config.height)
+  local commits_window = find_window_by_filetype("jj-commits")
+  local commits_config = vim.api.nvim_win_get_config(commits_window)
+  expect.equality(menu_config.row, commits_config.row + 1 + commits_config.height)
   expect.equality(menu_config.focusable, false)
+end
+
+T["shows current and parent commits in a bottom pane"] = function()
+  open_window()
+  local commits_window = find_window_by_filetype("jj-commits")
+  local buffer = vim.api.nvim_win_get_buf(commits_window)
+  local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+
+  expect.equality(lines, {
+    "main* dev | ab | 12f | current work",
+    "          | cd | 34e | (no description set)",
+  })
+end
+
+T["marks a bookmarkless working copy with @"] = function()
+  require("jj.cli").commits = function()
+    return {
+      { bookmarks = {}, change_id = "ab", commit_id = "12f", description = "wip" },
+      { bookmarks = {}, change_id = "cd", commit_id = "34e", description = "parent" },
+    }
+  end
+  open_window()
+  local commits_window = find_window_by_filetype("jj-commits")
+  local buffer = vim.api.nvim_win_get_buf(commits_window)
+  local lines = vim.api.nvim_buf_get_lines(buffer, 0, -1, false)
+
+  expect.equality(lines, {
+    "@ | ab | 12f | wip",
+    "  | cd | 34e | parent",
+  })
+end
+
+T["caps the commits pane at six rows"] = function()
+  local many = {}
+  for index = 1, 9 do
+    table.insert(many, { bookmarks = {}, change_id = "c" .. index, commit_id = "d" .. index, description = "x" })
+  end
+  require("jj.cli").commits = function() return many end
+  open_window()
+  local commits_window = find_window_by_filetype("jj-commits")
+
+  expect.equality(vim.api.nvim_win_get_height(commits_window), 6)
 end
 
 T["closing the content window closes the menu"] = function()
