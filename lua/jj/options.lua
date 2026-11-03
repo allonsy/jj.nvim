@@ -67,9 +67,7 @@ function M.borders()
   local c, junctions = characters_for(resolved.border)
   return {
     content = { c[1], c[2], c[3], c[4], "", "", "", c[8] },
-    commits = { junctions[1], c[2], junctions[2], c[4], "", "", "", c[8] },
-    menu = { "", "", "", c[4], c[5], c[6], c[7], c[8] },
-    separator = c[6],
+    commits = { junctions[1], c[2], junctions[2], c[4], c[5], c[6], c[7], c[8] },
   }
 end
 

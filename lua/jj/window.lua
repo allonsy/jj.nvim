@@ -4,22 +4,18 @@ local options = require("jj.options")
 
 local M = {}
 
-local MENU_HEIGHT = 2
-local MENU_DELIMITER = " | "
-
 local MAX_COMMIT_ROWS = 6
 local COMMIT_SEPARATOR_ROWS = 1
+local COMMIT_BOTTOM_BORDER_ROWS = 1
 
 local function layout(commit_count)
   local resolved = options.resolve()
   local width = math.floor(vim.o.columns * resolved.width)
   local total_height = math.floor(vim.o.lines * resolved.height)
-  local content_height = total_height - MENU_HEIGHT
   local commits_height = math.min(math.max(commit_count, 1), MAX_COMMIT_ROWS)
-  local files_height = content_height - commits_height - COMMIT_SEPARATOR_ROWS
+  local files_height = total_height - commits_height - COMMIT_SEPARATOR_ROWS - COMMIT_BOTTOM_BORDER_ROWS - 1
   return {
     width = width,
-    content_height = content_height,
     files_height = files_height,
     commits_height = commits_height,
     col = math.floor((vim.o.columns - width) / 2),
@@ -51,39 +47,6 @@ local function commits_config(frame)
     style = "minimal",
     border = options.borders().commits,
   }
-end
-
-local function menu_config(frame)
-  return {
-    relative = "editor",
-    width = frame.width,
-    height = MENU_HEIGHT,
-    col = frame.col,
-    row = frame.row + 1 + frame.content_height,
-    style = "minimal",
-    border = options.borders().menu,
-    focusable = false,
-    zindex = 51,
-  }
-end
-
-local function menu_lines(actions, width)
-  local labels = {}
-  for _, action in ipairs(actions) do
-    table.insert(labels, action.key .. ": " .. action.description)
-  end
-  local separator = string.rep(options.borders().separator, width)
-  local menu_text = table.concat(labels, MENU_DELIMITER)
-  return { separator, menu_text }
-end
-
-local function create_menu_buffer(actions, width)
-  local buffer = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_buf_set_lines(buffer, 0, -1, false, menu_lines(actions, width))
-  vim.bo[buffer].bufhidden = "wipe"
-  vim.bo[buffer].filetype = "jj-menu"
-  vim.bo[buffer].modifiable = false
-  return buffer
 end
 
 local HIGHLIGHT_NAMESPACE = vim.api.nvim_create_namespace("jj")
@@ -203,12 +166,9 @@ function M.open(lines, actions, commits)
   local window = vim.api.nvim_open_win(buffer, true, content_config(frame))
   local commits_buffer = create_commits_buffer(commits)
   local commits_window = vim.api.nvim_open_win(commits_buffer, false, commits_config(frame))
-  local menu_buffer = create_menu_buffer(actions, frame.width)
-  local menu_window = vim.api.nvim_open_win(menu_buffer, false, menu_config(frame))
   current_window = window
   current_commits_window = commits_window
   local function close()
-    close_if_valid(menu_window)
     close_if_valid(commits_window)
     close_if_valid(window)
   end

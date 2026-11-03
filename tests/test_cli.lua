@@ -140,6 +140,54 @@ T["commits reports whether a commit is conflicted"] = function()
   expect.equality(commits[2].conflict, false)
 end
 
+T["describe rewrites a multi-line message read back by description"] = function()
+  local repo = repo_with_parent_and_child()
+  local parent_id = jj(repo, { "log", "-r", "@-", "--no-graph", "-T", "change_id.shortest()" })
+
+  local ok, err = cli.describe(parent_id, "new subject\n\nbody line")
+  local text = cli.get_description(parent_id)
+
+  expect.equality(err, nil)
+  expect.equality(ok ~= nil, true)
+  expect.equality(vim.trim(text), "new subject\n\nbody line")
+end
+
+T["abandon removes the commit"] = function()
+  local repo = repo_with_parent_and_child()
+  local parent_id = jj(repo, { "log", "-r", "@-", "--no-graph", "-T", "change_id.shortest()" })
+
+  local ok, err = cli.abandon(parent_id)
+
+  expect.equality(err, nil)
+  expect.equality(ok ~= nil, true)
+  local remaining = jj(repo, { "log", "-r", parent_id, "--no-graph", "-T", "change_id" })
+  expect.equality(remaining, "")
+end
+
+T["new creates a child of the working copy"] = function()
+  local repo = repo_with_parent_and_child()
+  local old_id = jj(repo, { "log", "-r", "@", "--no-graph", "-T", "change_id" })
+
+  local ok, err = cli.new()
+
+  expect.equality(err, nil)
+  expect.equality(ok ~= nil, true)
+  local parent_id = jj(repo, { "log", "-r", "@-", "--no-graph", "-T", "change_id" })
+  expect.equality(parent_id, old_id)
+end
+
+T["fork inserts a commit between trunk and the working copy without editing it"] = function()
+  local repo = repo_with_parent_and_child()
+  local working_copy = jj(repo, { "log", "-r", "@", "--no-graph", "-T", "change_id" })
+
+  local ok, err = cli.fork()
+
+  expect.equality(err, nil)
+  expect.equality(ok ~= nil, true)
+  local still_working_copy = jj(repo, { "log", "-r", "@", "--no-graph", "-T", "change_id" })
+  expect.equality(still_working_copy, working_copy)
+end
+
 T["a failing operation returns an error"] = function()
   repo_with_parent_and_child()
 
