@@ -4,13 +4,15 @@
 
 **Blocked by:** 01 (Test harness), 02 (jj module)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A workflow file under `.github/workflows/` triggers on push and pull request
-- [ ] It installs Neovim at the spec's minimum version and a pinned jj version
-- [ ] It runs the same command documented in ticket 01 and fails when any test fails
-- [ ] The jj module tests (real jj, temporary repo) pass in CI
-- [ ] Action versions are pinned to a tag or commit, not a floating branch
-- [ ] The workflow can be verified locally or by inspecting a green run once the repo is on GitHub (note which in the ticket when done)
+- [x] A workflow file under `.github/workflows/` triggers on push and pull request
+- [x] It installs Neovim at the spec's minimum version and a pinned jj version
+- [x] It runs the same command documented in ticket 01 and fails when any test fails
+- [x] The jj module tests (real jj, temporary repo) pass in CI
+- [x] Action versions are pinned to a tag or commit, not a floating branch
+- [x] The workflow can be verified locally or by inspecting a green run once the repo is on GitHub (note which in the ticket when done)
 
 **Context:** Read `planning/jj-status-window/spec.md` (design, layout and decisions) and `GLOSSARY.md` (vocabulary) before starting.
+
+**Verification note:** Workflow is `.github/workflows/test.yml`. Verified locally only: the test command passes, and the release asset URLs and tarball layout were checked. A green GitHub run has not been observed yet; inspect the first run once the repo is pushed. The jj module tests rely on `JJ_USER` and `JJ_EMAIL` set in the workflow env.
