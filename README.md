@@ -23,7 +23,7 @@ vim.keymap.set("n", "<leader>jj", require("jj").status_open)
 
 `require("jj").status_open()` opens a centered floating window titled `jj`, sized at 80% of the editor. It runs jj from Neovim's cwd and finds the repo root with `jj root`. Calling it again while the window is open refreshes it. If jj is missing or the cwd is not in a repo, an error notification is shown and no window opens.
 
-The window has two panes and a menu line listing the keys:
+The window has two panes:
 
 - Top pane: the files changed in the current commit (`@`), one per line, prefixed `A`, `M` or `D`.
 - Bottom pane: the current commit (`@`) followed by its immediate parents. It grows to at most 6 rows, then scrolls.
@@ -47,9 +47,13 @@ bookmarks | change id | commit id | description
 | `r` | Refresh |
 | `s` | Squash |
 | `u` | Restore |
+| `d` | Describe (commits pane only) |
+| `x` | Abandon (commits pane only, no confirmation) |
+| `n` | New commit (`jj new`) |
+| `f` | Fork |
 | `<Esc>` | Close |
 
-The window also closes when focus moves to anything other than its own panes. After `s` or `u`, the window refreshes. If jj fails, an error notification is shown.
+The window also closes when focus moves to anything other than its own panes. After `s`, `u`, `x`, `n` or `f`, the window refreshes. If jj fails, an error notification is shown.
 
 What `s` and `u` do depend on the pane and the line under the cursor:
 
@@ -59,6 +63,14 @@ What `s` and `u` do depend on the pane and the line under the cursor:
 | Commits | Squash `@` into the commit under the cursor. | Move the changes of the commit under the cursor into `@`. |
 
 Squashes keep the emptied source commit and keep the destination's description.
+
+`n` runs `jj new` and `f` runs `jj new --after 'trunk()' --before @ --no-edit`, which inserts a new empty commit between trunk and `@` without moving to it. Both work in either pane and refresh the window afterwards.
+
+`x` in the commits pane runs `jj abandon` on the commit under the cursor immediately, with no confirmation. Abandoning `@` makes jj move you to a fresh working-copy commit. `x` does nothing in the files pane.
+
+### Describe
+
+`d` in the commits pane opens a floating editor titled `describe <change id>` holding the full description of the commit under the cursor. It is a normal buffer with filetype `jjdescription`. `:wq` saves the message with `jj describe` and refreshes the window. `:q!` cancels and leaves the commit untouched. `d` does nothing in the files pane.
 
 ## Configuration
 

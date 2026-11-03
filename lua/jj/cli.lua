@@ -93,4 +93,25 @@ function M.unsquash_commit(change_id)
   return run_in_root(args)
 end
 
+function M.abandon(change_id)
+  return run_in_root({ "abandon", change_id })
+end
+
+function M.new()
+  return run_in_root({ "new" })
+end
+
+function M.fork()
+  return run_in_root({ "new", "--after", "trunk()", "--before", "@", "--no-edit" })
+end
+
+function M.get_description(change_id)
+  local args = { "log", "-r", change_id, "--no-graph", "--color=never", "-T", "description" }
+  return run_in_root(args)
+end
+
+function M.describe(change_id, message)
+  return run_in_root({ "describe", "-r", change_id, "-m", message })
+end
+
 return M

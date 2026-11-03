@@ -64,24 +64,10 @@ T["shows the status output"] = function()
   expect.equality(lines, { "A file.txt", "M other.txt", "D gone.txt" })
 end
 
-T["shows a sticky menu bar below the content"] = function()
-  local window = open_window()
-  local content_config = vim.api.nvim_win_get_config(window)
-  local menu_window
-  for _, candidate in ipairs(vim.api.nvim_list_wins()) do
-    local buffer = vim.api.nvim_win_get_buf(candidate)
-    if vim.bo[buffer].filetype == "jj-menu" then menu_window = candidate end
-  end
-  local menu_buffer = vim.api.nvim_win_get_buf(menu_window)
-  local menu_lines = vim.api.nvim_buf_get_lines(menu_buffer, 0, -1, false)
-  local menu_config = vim.api.nvim_win_get_config(menu_window)
+T["has no menu ribbon"] = function()
+  open_window()
 
-  expect.equality(menu_lines[1], string.rep("─", content_config.width))
-  expect.equality(menu_lines[2], "r: refresh | s: squash | u: restore")
-  local commits_window = find_window_by_filetype("jj-commits")
-  local commits_config = vim.api.nvim_win_get_config(commits_window)
-  expect.equality(menu_config.row, commits_config.row + 1 + commits_config.height)
-  expect.equality(menu_config.focusable, false)
+  expect.equality(find_window_by_filetype("jj-menu"), nil)
 end
 
 T["shows current and parent commits in a bottom pane"] = function()
@@ -148,17 +134,12 @@ T["caps the commits pane at six rows"] = function()
   expect.equality(vim.api.nvim_win_get_height(commits_window), 6)
 end
 
-T["closing the content window closes the menu"] = function()
+T["closing the content window closes the commits pane"] = function()
   open_window()
 
   vim.api.nvim_feedkeys(vim.keycode("<Esc>"), "x", false)
 
-  local menu_count = 0
-  for _, candidate in ipairs(vim.api.nvim_list_wins()) do
-    local buffer = vim.api.nvim_win_get_buf(candidate)
-    if vim.bo[buffer].filetype == "jj-menu" then menu_count = menu_count + 1 end
-  end
-  expect.equality(menu_count, 0)
+  expect.equality(find_window_by_filetype("jj-commits"), nil)
 end
 
 T["highlights lines by modification code"] = function()

@@ -24,6 +24,11 @@ local T = MiniTest.new_set({
       stub("squash_file", function(path, id) table.insert(calls, { "squash_file", path, id }); return "" end)
       stub("squash_commit", function(id) table.insert(calls, { "squash_commit", id }); return "" end)
       stub("restore_file", function(path) table.insert(calls, { "restore_file", path }); return "" end)
+      stub("get_description", function(id) table.insert(calls, { "get_description", id }); return "old message\n\nbody\n" end)
+      stub("describe", function(id, message) table.insert(calls, { "describe", id, message }); return "" end)
+      stub("abandon", function(id) table.insert(calls, { "abandon", id }); return "" end)
+      stub("new", function() table.insert(calls, { "new" }); return "" end)
+      stub("fork", function() table.insert(calls, { "fork" }); return "" end)
       stub("unsquash_commit", function(id) table.insert(calls, { "unsquash_commit", id }); return "" end)
     end,
     post_case = function()
@@ -110,6 +115,97 @@ T["squash on a file with one parent skips the choice"] = function()
 
   expect.equality(calls, { { "squash_file", "a.txt", "pa" } })
   expect.equality(window_with_filetype("jj-select"), nil)
+end
+
+local function editor_buffer()
+  local editor = window_with_filetype("jjdescription")
+  return vim.api.nvim_win_get_buf(editor)
+end
+
+T["describe opens an editor with the full commit message"] = function()
+  open_on_commit_row(2)
+  press("d")
+
+  local lines = vim.api.nvim_buf_get_lines(editor_buffer(), 0, -1, false)
+  expect.equality(lines, { "old message", "", "body" })
+  expect.equality(calls, { { "get_description", "pa" } })
+end
+
+T["describe does nothing in the files pane"] = function()
+  open_on_file_line(1)
+  press("d")
+
+  expect.equality(window_with_filetype("jjdescription"), nil)
+  expect.equality(calls, {})
+end
+
+T["wq saves the edited message"] = function()
+  open_on_commit_row(2)
+  press("d")
+  vim.api.nvim_buf_set_lines(editor_buffer(), 0, 1, false, { "new subject" })
+  vim.cmd("wq")
+  vim.wait(100, function() return window_with_filetype("jjdescription") == nil end)
+  vim.wait(50)
+
+  expect.equality(calls, {
+    { "get_description", "pa" },
+    { "describe", "pa", "new subject\n\nbody" },
+  })
+  expect.equality(window_with_filetype("jjdescription"), nil)
+  expect.equality(window_with_filetype("jj") ~= nil, true)
+end
+
+T["q! cancels without describing"] = function()
+  open_on_commit_row(2)
+  press("d")
+  vim.api.nvim_buf_set_lines(editor_buffer(), 0, 1, false, { "discarded" })
+  vim.cmd("q!")
+  vim.wait(50)
+
+  expect.equality(calls, { { "get_description", "pa" } })
+  expect.equality(window_with_filetype("jjdescription"), nil)
+  expect.equality(window_with_filetype("jj") ~= nil, true)
+end
+
+T["abandon on a commit abandons it without confirmation"] = function()
+  open_on_commit_row(2)
+  press("x")
+
+  expect.equality(calls, { { "abandon", "pa" } })
+  expect.equality(window_with_filetype("jj") ~= nil, true)
+end
+
+T["abandon does nothing in the files pane"] = function()
+  open_on_file_line(1)
+  press("x")
+
+  expect.equality(calls, {})
+end
+
+T["new runs jj new and refreshes"] = function()
+  open_on_file_line(1)
+  local refreshes = 0
+  require("jj.cli").status = function()
+    refreshes = refreshes + 1
+    return "M a.txt\n"
+  end
+  press("n")
+
+  expect.equality(calls, { { "new" } })
+  expect.equality(refreshes, 1)
+end
+
+T["fork runs from the commits pane and refreshes"] = function()
+  open_on_commit_row(1)
+  local refreshes = 0
+  require("jj.cli").status = function()
+    refreshes = refreshes + 1
+    return "M a.txt\n"
+  end
+  press("f")
+
+  expect.equality(calls, { { "fork" } })
+  expect.equality(refreshes, 1)
 end
 
 T["the window refreshes after an operation"] = function()

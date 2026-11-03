@@ -57,8 +57,7 @@ T["full override applies width, height and border"] = function()
   expect.equality(config.border[1], "╔")
   local commits_config = find_config_by_filetype("jj-commits")
   expect.equality(commits_config.border[1], "╠")
-  local menu_config = find_config_by_filetype("jj-menu")
-  expect.equality(menu_config.border[5], "╝")
+  expect.equality(commits_config.border[5], "╝")
 end
 
 T["custom border table is used for the outer frame"] = function()

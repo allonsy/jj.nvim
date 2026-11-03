@@ -1,5 +1,6 @@
 local cli = require("jj.cli")
 local commit_lines = require("jj.commit_lines")
+local editor = require("jj.editor")
 local errors = require("jj.errors")
 local selector = require("jj.select")
 local window = require("jj.window")
@@ -69,11 +70,45 @@ local function on_restore(context)
   refresh_after(function() return cli.restore_file(path) end)
 end
 
+local function on_describe(context)
+  if context.pane ~= "commits" then return end
+  local commit = current_view.commits[context.index]
+  if not commit then return end
+  local text, err = cli.get_description(commit.change_id)
+  if not text then
+    errors.log_error(err)
+    return
+  end
+  local function save(message)
+    refresh_after(function() return cli.describe(commit.change_id, message) end)
+  end
+  editor.open(commit.change_id, text, save)
+end
+
+local function on_abandon(context)
+  if context.pane ~= "commits" then return end
+  local commit = current_view.commits[context.index]
+  if not commit then return end
+  refresh_after(function() return cli.abandon(commit.change_id) end)
+end
+
+local function on_new()
+  refresh_after(cli.new)
+end
+
+local function on_fork()
+  refresh_after(cli.fork)
+end
+
 local function status_actions()
   return {
     { key = "r", description = "refresh", callback = M.open },
     { key = "s", description = "squash", callback = on_squash },
     { key = "u", description = "restore", callback = on_restore },
+    { key = "d", description = "describe", callback = on_describe },
+    { key = "x", description = "abandon", callback = on_abandon },
+    { key = "n", description = "new", callback = on_new },
+    { key = "f", description = "fork", callback = on_fork },
   }
 end
 
