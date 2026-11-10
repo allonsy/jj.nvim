@@ -11,10 +11,12 @@ Install with your plugin manager, for example lazy.nvim:
 { "allonsy/jj.nvim" }
 ```
 
-The plugin defines no commands and no default keymaps. Bind a key to open the status window:
+The plugin defines no commands and no default keymaps. Bind keys to the functions you want:
 
 ```lua
 vim.keymap.set("n", "<leader>jj", require("jj").status_open)
+vim.keymap.set("n", "<leader>jl", require("jj").log_open)
+vim.keymap.set("n", "<leader>jb", require("jj").blame_open)
 ```
 
 `setup` is optional and only needed to customize colors.
@@ -72,6 +74,37 @@ Squashes keep the emptied source commit and keep the destination's description.
 
 `d` in the commits pane opens a floating editor titled `describe <change id>` holding the full description of the commit under the cursor. It is a normal buffer with filetype `jjdescription`. `:wq` saves the message with `jj describe` and refreshes the window. `:q!` cancels and leaves the commit untouched. `d` does nothing in the files pane.
 
+## Log and history views
+
+`require("jj").log_open()` and `require("jj").blame_open()` open read-only views in the current window. Unlike the status window, these are ordinary buffers (named `jj://...`), so all the usual motions work and `<C-o>` goes back to the previous view. The views lead into each other:
+
+| View | Opened by | Shows |
+| --- | --- | --- |
+| Log view | `log_open()` | `jj log` with its graph and your default revset, one commit per line: change id, commit id, author, date, bookmarks, description. |
+| Change overview | `<CR>` in the log view, `c` in a history or blame view | `jj show` for one change: its metadata, then its patches in git format. |
+| Tree view | `e` in a change overview, history view or blame view | One directory of the repo as it was at that change, directories first. `e` always starts at the repo root. |
+| History view | `h` in a tree view | The changes that touched the file or directory under the cursor, at that change or earlier, newest first: `change id \| commit id \| author \| date \| description`. |
+| Blame view | `blame_open()` | The current buffer's file with `change id \| commit id \| author \| date \|` drawn before every line. |
+| File | `<CR>` on a file | The file as it was at that change, read-only, with its usual filetype. |
+
+### Keys
+
+| View | Key | Action |
+| --- | --- | --- |
+| Log | `<CR>` | Open the change overview of the commit under the cursor |
+| Log | `m` | Show mine: `jj log -r '(trunk()..mine()):: \| trunk()'`, my changes that are not on trunk, with their descendants |
+| Log | `a` | Show all: `jj log -r '::'` |
+| Change overview | `e` | Explore the tree at that change |
+| Tree | `<CR>` | Enter the directory or open the file under the cursor |
+| Tree | `-` | Go up to the parent directory (same as `<CR>` on `../`) |
+| Tree | `h` | History of the file or directory under the cursor |
+| History | `<CR>` | Open the file (or, for a directory's history, the directory) as it was at the change under the cursor |
+| History, Blame | `c` | Change overview of the change under the cursor |
+| History, Blame | `e` | Explore the tree at the change under the cursor |
+| Blame | `<CR>` | Open the file as it was at the change that introduced the line, on that line |
+
+Calling `log_open()` again refreshes the log view and returns it to the default revset. `blame_open()` blames the working copy (`@`) version of the current file as saved on disk; called on a file opened from one of these views, it blames the file as of that change. The blame columns are inline virtual text, not buffer text: the buffer holds only the file's content and keeps its filetype, so tree-sitter and syntax highlighting work, but the columns cannot be searched or yanked and the cursor does not move into them. The tree view is the plugin's own buffer rather than netrw, because the files of an old change do not exist on disk.
+
 ## Configuration
 
 ```lua
@@ -101,6 +134,8 @@ Every key is optional; the values above are the defaults. A value is either a he
 | `STATUS_COMMIT_CONFLICT` | The `(C)` marker | `JjConflict` |
 | `STATUS_COMMIT_CHANGE_ID` | Change id | `JjChangeId` |
 | `STATUS_COMMIT_CID` | Commit id | `JjCommitId` |
+
+The log, history and blame views use the same bookmark, change id and commit id colors.
 
 ## Testing
 
