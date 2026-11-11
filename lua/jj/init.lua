@@ -19,4 +19,12 @@ function M.status_open()
   status.open()
 end
 
+function M.log_open()
+  require("jj.log").open()
+end
+
+function M.blame_open()
+  require("jj.blame").open()
+end
+
 return M

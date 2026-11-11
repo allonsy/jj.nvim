@@ -1,3 +1,4 @@
+local consts = require("jj.consts")
 local window = require("jj.window")
 
 local M = {}
@@ -28,7 +29,7 @@ end
 
 local function create_buffer(change_id, text)
   local buffer = vim.api.nvim_create_buf(false, false)
-  vim.api.nvim_buf_set_name(buffer, "jj://describe/" .. change_id)
+  vim.api.nvim_buf_set_name(buffer, consts.URI_PREFIX .. "describe/" .. change_id)
   vim.bo[buffer].buftype = "acwrite"
   vim.bo[buffer].bufhidden = "wipe"
   vim.bo[buffer].swapfile = false
